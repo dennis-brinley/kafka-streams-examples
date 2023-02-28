@@ -10,8 +10,9 @@ There are several important differences between the confluent version
 - Output to the Kafka Connect Framework, Elasticsearch sink connector, is excluded
 - There are 3 new producer and 3 new consumer microservice applications
 
-![Microservices Demo Overview](images/microservices-demo-overview.jpg)
+The following diagram illustrates the microservices application.
 
+![Microservices Demo Overview](images/microservices-demo-overview.jpg)
 
 ## Requirements
 
