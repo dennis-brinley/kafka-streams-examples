@@ -1,3 +1,37 @@
+# Kafka Microservices Demo for Solace Event Portal
+
+This project was adapted from Confluent "Kafka Streams Examples." The purpose of this derivative is to create a functioning microservices demo so that it can be scanned, audited, and modified to demonstrate the capabilities of Solace Event Portal.
+
+## Build
+
+### Build Java Code
+
+```bash
+mvn clean
+
+mvn -DskipTests=true package
+```
+
+#### Run Sample Producer and Consumer
+
+```bash
+java -cp target/kafka-streams-examples-7.1.1-standalone.jar \
+  io.confluent.examples.streams.microservices.util.ProduceOrders --config-file $CONFIG_FILE
+
+java -cp target/kafka-streams-examples-7.1.1-standalone.jar \
+  io.confluent.examples.streams.microservices.util.ConsumeOrders --config-file $CONFIG_FILE
+```
+
+### Build Docker Container
+
+```bash
+docker build -t ghcr.io/solacelabs/[package-name]:[tag-name] --file Dockerfile .
+```
+
+
+
+
+
 # Kafka Streams Examples
 
 This project contains code examples that demonstrate how to implement real-time applications and event-driven
