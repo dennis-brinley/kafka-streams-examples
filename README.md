@@ -2,9 +2,22 @@
 
 This project was adapted from Confluent "Kafka Streams Examples." The purpose of this derivative is to create a functioning microservices demo so that it can be scanned, audited, and modified to demonstrate the capabilities of Solace Event Portal.
 
-## Build
+## Requirements
 
-### Build Java Code
+- Access to a Kafka cluster with sufficient privilges to create and read/write topics
+- Currently, the demo will only work if a Confluent-compatible schema registry is present
+- Java 11 
+- Docker Desktop
+
+## Execution Options
+
+1. Build and execute yourself
+2. Execute a container from the published image.
+
+## Option 1 Only: Build Youself
+You can build your own copy of the java code and docker container. Clone the repository and proceed with the build steps from the project root directory.
+
+### 1-A. Build Java Code
 
 ```bash
 mvn clean
@@ -12,8 +25,9 @@ mvn clean
 mvn -DskipTests=true package
 ```
 
-#### Run Sample Producer and Consumer
+#### (Optional) Run Sample Producer and Consumer
 
+Running the services requires a configuration file. See below for examples.
 ```bash
 java -cp target/kafka-streams-examples-7.1.1-standalone.jar \
   io.confluent.examples.streams.microservices.util.ProduceOrders --config-file $CONFIG_FILE
@@ -22,12 +36,101 @@ java -cp target/kafka-streams-examples-7.1.1-standalone.jar \
   io.confluent.examples.streams.microservices.util.ConsumeOrders --config-file $CONFIG_FILE
 ```
 
-### Build Docker Container
+### 1-B. Build Docker Container
 
 ```bash
-docker build -t ghcr.io/solacelabs/[package-name]:[tag-name] --file Dockerfile .
+docker build -t [repo-name]:[tag-name] --file Dockerfile .
 ```
 
+## Executing the Demo
+
+The demo can be executed from a detached container or an interactive container. The latter gives your more control and better opportunity to observe and to debug should problems arise.
+
+In both cases, the following configurations are required:
+- volume : specify the folder where your kafka/schema registry configuration properties file is mapped in the container
+- env CONFIG_FILE : specify the container path where the config file is found
+- env DEMO_HOME : The home directory of the demo, currently just DEMO_HOME=/opt/kafka-demo
+
+### Executing the Demo from a detached container
+
+Example command:
+```bash
+docker run --name my-kafka-demo --rm --detach \
+  --volume /home/ec2-user/kafka-demo/my-configs:/opt/kafka-demo/my-configs \
+  --env CONFIG_FILE=/opt/kafka-demo/my-configs/my-kafka-config.properties \
+  --env DEMO_HOME=/opt/kafka-demo \
+  ghcr.io/solacelabs/kafka-microservices-demo:1.0
+```
+
+## Starting the Demo from an Interactive Container
+
+### A. Start the Container in interactive mode
+Run the following command to execute the demo container interactively:
+```bash
+docker run -i -t --name kafka-demo \
+  --rm \
+  --volume /home/ec2-user/kafka-demo/my-configs:/opt/kafka-demo/my-configs \
+  --env CONFIG_FILE=/opt/kafka-demo/my-configs/my-kafka-config.properties \
+  --env DEMO_HOME=/opt/kafka-demo \
+  ghcr.io/solacelabs/kafka-microservices-demo:1.0 /bin/bash
+```
+
+Commands below are executed in the kafk-demo container from the demo home directory: /opt/kafka-demo
+
+### B. Prime Environment
+Set generic environment variables using the following command:
+```bash
+source scripts/env.config
+```
+
+### C. Create Topics (If Topics Do Not Exist on Cluster)
+If this is a new Kafka demo region, you will need to create the primary topic associated with the demo. The topics to create are defined in ```scripts/topics.txt```. The script will not throw errors if the topics already exist. 
+```bash
+scripts/create-topics.sh scripts/topics.txt
+```
+
+### D. Start the app services
+
+```bash
+scripts/exec-demo.sh
+
+### Verify that the services are running:
+ps -ef | grep kafka
+```
+
+### E. Terminating the Demo
+If you want to kill the demo but leave the container running:
+
+```bash
+scripts/kill-svc.sh .microservices.pids
+```
+
+Otherwise, you can just exit the shell, which will terminate the container and any running processes.
+
+
+## Sample Config Files
+
+### Confluent Cloud with SASL Plain over SSL
+```properties
+bootstrap.servers=[kafka-cluster-host.us-east-2.aws.confluent.cloud:9092]
+security.protocol=SASL_SSL
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='[Confluent API Key]' password='[Confluent API Key Secret]';
+sasl.mechanism=PLAIN
+
+# Required for correctness in Apache Kafka clients prior to 2.6
+client.dns.lookup=use_all_dns_ips
+
+# Best practice for higher availability in Apache Kafka clients prior to 3.0
+session.timeout.ms=45000
+
+# Best practice for Kafka producer to prevent data loss
+acks=all
+
+# Required connection configs for Confluent Cloud Schema Registry
+schema.registry.url=[https://sr-server-id.us-east-2.aws.confluent.cloud]
+basic.auth.credentials.source=USER_INFO
+basic.auth.user.info=[Confluent SR API Key]:[Confluent SR API Secret]
+```
 
 
 
