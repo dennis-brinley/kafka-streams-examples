@@ -1,6 +1,17 @@
+
 # Kafka Microservices Demo for Solace Event Portal
 
 This project was adapted from Confluent "Kafka Streams Examples." The purpose of this derivative is to create a functioning microservices demo so that it can be scanned, audited, and modified to demonstrate the capabilities of Solace Event Portal.
+
+The demo is based off of the Confluent kafka-streams-examples, specifically, the microservices subset. The Confluent tutorial on the subject can be found here: [Tutorial: Introduction to Streaming Application Development](https://docs.confluent.io/platform/current/tutorials/examples/microservices-orders/docs/index.html#tutorial-introduction-to-streaming-application-development)
+
+There are several important differences between the confluent version
+- Input from the Kafka Connect framework, JDBC source connector, is excluded
+- Output to the Kafka Connect Framework, Elasticsearch sink connector, is excluded
+- There are 3 new producer and 3 new consumer microservice applications
+
+![Microservices Demo Overview](images/microservices-demo-overview.jpg)
+
 
 ## Requirements
 
