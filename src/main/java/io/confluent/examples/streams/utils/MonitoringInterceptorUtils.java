@@ -1,3 +1,6 @@
+/**
+ * Modified to allow monitoring interceptors to be excluded based upon a configuration property
+ */
 package io.confluent.examples.streams.utils;
 
 import io.confluent.monitoring.clients.interceptor.MonitoringInterceptorConfig;
@@ -25,6 +28,8 @@ import static io.confluent.monitoring.clients.interceptor.MonitoringInterceptorC
  *
  */
 public class MonitoringInterceptorUtils {
+
+    private static String CLUSTER_IS_CONFLUENT = "confluent.use.monitoring.interceptors";
 
     private static final String CONSUMER_INTERCEPTOR = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor";
     private static final String PRODUCER_INTERCEPTOR = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor";
@@ -62,6 +67,9 @@ public class MonitoringInterceptorUtils {
     }
 
     public static void maybeConfigureInterceptorsStreams(final Properties streamsConfig) {
+        if ( !streamsConfig.getProperty(CLUSTER_IS_CONFLUENT, "true").toLowerCase().equals("true")) {
+            return;
+        }
         if (hasMonitoringConsumerInterceptor() && hasMonitoringProducerInterceptor()) {
             streamsConfig.put(StreamsConfig.producerPrefix(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG),
                     PRODUCER_INTERCEPTOR);
@@ -72,6 +80,9 @@ public class MonitoringInterceptorUtils {
     }
 
     public static void maybeConfigureInterceptorsProducer(final Properties producerConfig) {
+        if ( !producerConfig.getProperty(CLUSTER_IS_CONFLUENT, "true").toLowerCase().equals("true")) {
+            return;
+        }
         if (hasMonitoringProducerInterceptor()) {
             producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PRODUCER_INTERCEPTOR);
             addMonitoringPrefixedConfigs(producerConfig);
@@ -79,6 +90,9 @@ public class MonitoringInterceptorUtils {
     }
 
     public static void maybeConfigureInterceptorsConsumer(final Properties consumerConfig) {
+        if ( !consumerConfig.getProperty(CLUSTER_IS_CONFLUENT, "true").toLowerCase().equals("true")) {
+            return;
+        }
          if(hasMonitoringConsumerInterceptor()) {
              consumerConfig.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, CONSUMER_INTERCEPTOR);
              addMonitoringPrefixedConfigs(consumerConfig);

@@ -1,0 +1,11 @@
+customers
+orders
+orders-enriched
+order-validations
+payments
+warehouse-inventory
+bronze
+silver
+gold
+platinum
+_confluent-monitoring

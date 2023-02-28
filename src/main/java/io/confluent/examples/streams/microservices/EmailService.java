@@ -13,7 +13,11 @@ import io.confluent.examples.streams.avro.microservices.Payment;
 
 import io.confluent.examples.streams.microservices.domain.Schemas;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+
 import org.apache.commons.cli.*;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -162,13 +166,13 @@ public class EmailService implements Service {
             })
             .orElse(new Properties());
 
-
-    final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
-    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+//    final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
+//    final String schemaRegistryUrl = defaultConfig.getProperty( AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, DEFAULT_SCHEMA_REGISTRY_URL);
+//    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
     Schemas.configureSerdes(defaultConfig);
 
     service.start(
-            cl.getOptionValue("bootstrap-servers", DEFAULT_BOOTSTRAP_SERVERS),
+            defaultConfig.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS),
             cl.getOptionValue("state-dir", "/tmp/kafka-streams-examples"),
             defaultConfig);
     addShutdownHookAndBlock(service);

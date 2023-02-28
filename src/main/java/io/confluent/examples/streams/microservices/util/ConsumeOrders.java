@@ -3,6 +3,9 @@ package io.confluent.examples.streams.microservices.util;
 import io.confluent.examples.streams.microservices.domain.Schemas.Topics;
 import io.confluent.examples.streams.utils.MonitoringInterceptorUtils;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -11,6 +14,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -37,8 +42,8 @@ public class ConsumeOrders {
 
         final CommandLine cl = new DefaultParser().parse(opts, args);
 
-        final String bootstrapServers = cl.getOptionValue("b", DEFAULT_BOOTSTRAP_SERVERS);
-        final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
+//        final String bootstrapServers = cl.getOptionValue("b", DEFAULT_BOOTSTRAP_SERVERS);
+//        final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
 
         final Properties defaultConfig = Optional.ofNullable(cl.getOptionValue("config-file", null))
                 .map(path -> {
@@ -52,14 +57,20 @@ public class ConsumeOrders {
 
         final Properties props = new Properties();
         props.putAll(defaultConfig);
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-orders");
+//        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "read-orders");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, Topics.ORDERS.keySerde().deserializer().getClass());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, Topics.ORDERS.valueSerde().deserializer().getClass());
+//        props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+//        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, Topics.ORDERS.keySerde().deserializer().getClass());
+//        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, Topics.ORDERS.valueSerde().deserializer().getClass());
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
+        props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
+        props.put(KafkaAvroDeserializerConfig.VALUE_SUBJECT_NAME_STRATEGY, "io.confluent.kafka.serializers.subject.TopicNameStrategy");
+
+        // TODO - IGNORE IF NOT CONFLUENT
         MonitoringInterceptorUtils.maybeConfigureInterceptorsConsumer(props);
 
         try (final KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {

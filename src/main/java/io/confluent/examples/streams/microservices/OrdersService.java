@@ -9,6 +9,7 @@ import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import org.apache.commons.cli.*;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -440,7 +441,6 @@ public class OrdersService implements Service {
       return;
     }
 
-    final String bootstrapServers = cl.getOptionValue("bootstrap-servers", DEFAULT_BOOTSTRAP_SERVERS);
     final String restHostname = cl.getOptionValue("hostname", "localhost");
     final int restPort = Integer.parseInt(cl.getOptionValue("port", "5432"));
     final String stateDir = cl.getOptionValue("state-dir", "/tmp/kafka-streams");
@@ -455,8 +455,8 @@ public class OrdersService implements Service {
             })
             .orElse(new Properties());
 
-    final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
-    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+    final String bootstrapServers = defaultConfig.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS);
+
     Schemas.configureSerdes(defaultConfig);
 
     final OrdersService service = new OrdersService(restHostname, restPort);

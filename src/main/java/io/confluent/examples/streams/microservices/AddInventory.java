@@ -74,20 +74,21 @@ public class AddInventory {
             return;
         }
 
-        final int quantityUnderpants = Integer.parseInt(cl.getOptionValue("u", "20"));
-        final int quantityJumpers = Integer.parseInt(cl.getOptionValue("j", "10"));
-
-        final String bootstrapServers = cl.getOptionValue("b", DEFAULT_BOOTSTRAP_SERVERS);
-
         final Properties defaultConfig = Optional.ofNullable(cl.getOptionValue("config-file", null))
-                .map(path -> {
-                    try {
-                        return buildPropertiesFromConfigFile(path);
-                    } catch (final IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .orElse(new Properties());
+        .map(path -> {
+            try {
+                return buildPropertiesFromConfigFile(path);
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
+        })
+        .orElse(new Properties());
+
+        final String bootstrapServers = defaultConfig.getProperty( ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS);
+            //cl.getOptionValue("b", DEFAULT_BOOTSTRAP_SERVERS);
+
+        final int quantityUnderpants = Integer.parseInt(cl.getOptionValue("u", "250000"));
+        final int quantityJumpers = Integer.parseInt(cl.getOptionValue("j", "10000"));
 
         // Send Inventory
         final List<KeyValue<Product, Integer>> inventory = asList(

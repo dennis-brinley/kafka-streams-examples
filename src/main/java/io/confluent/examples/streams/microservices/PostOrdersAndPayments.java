@@ -92,7 +92,7 @@ public class PostOrdersAndPayments {
             return;
         }
 
-        final String bootstrapServers = cl.getOptionValue("bootstrap-servers", DEFAULT_BOOTSTRAP_SERVERS);
+//        final String bootstrapServers = cl.getOptionValue("bootstrap-servers", DEFAULT_BOOTSTRAP_SERVERS);
         final String orderServiceUrl = cl.getOptionValue("order-service-url", "http://localhost:5432");
         final int startingOrderId = Integer.parseInt(cl.getOptionValue("order-id", "1"));
 
@@ -106,8 +106,10 @@ public class PostOrdersAndPayments {
                 })
                 .orElse(new Properties());
 
-        final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
-        defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+//        final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
+//        defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+        final String bootstrapServers = defaultConfig.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS);
+
         Schemas.configureSerdes(defaultConfig);
 
         OrderBean returnedOrder;
@@ -115,8 +117,8 @@ public class PostOrdersAndPayments {
 
         final ClientConfig clientConfig = new ClientConfig();
         clientConfig.register(JacksonFeature.class);
-        clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 60000)
-                    .property(ClientProperties.READ_TIMEOUT, 60000);
+        clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 30000)
+                    .property(ClientProperties.READ_TIMEOUT, 30000);
         final Client client = ClientBuilder.newClient(clientConfig);
 
         final KafkaProducer<String, Payment> paymentProducer = buildPaymentProducer(bootstrapServers, defaultConfig);
@@ -133,8 +135,8 @@ public class PostOrdersAndPayments {
                     randomCustomerId,
                     OrderState.CREATED,
                     randomProduct,
-                    1,
-                    1d);
+                    (i % 3) + 1,
+                    (4.0d * ((i%3) + 1)));
 
             // POST order to OrdersService
             System.out.printf("Posting order to: %s   .... ", path.urlPost());
@@ -157,7 +159,7 @@ public class PostOrdersAndPayments {
                 }
 
                 // Send payment
-                final Payment payment = new Payment("Payment:1234", id(i), "CZK", 1000.00d);
+                final Payment payment = new Payment("Payment" + ( i + 10000 ), id(i), "CZK", inputOrder.getPrice());
                 sendPayment(payment.getId(), payment, paymentProducer);
                 i++;
             } catch (final Exception ex) {

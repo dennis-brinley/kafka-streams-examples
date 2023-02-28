@@ -25,12 +25,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+
 import org.apache.commons.cli.*;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,12 +86,14 @@ public class OrderDetailsService implements Service {
       }
 
       while (running) {
-        final ConsumerRecords<String, Order> records = consumer.poll(Duration.ofMillis(100));
+        final ConsumerRecords<String, Order> records = consumer.poll(Duration.ofMillis(500));
         if (records.count() > 0) {
           if (eosEnabled) {
             producer.beginTransaction();
           }
           for (final ConsumerRecord<String, Order> record : records) {
+
+            System.out.println( record.value().toString() );
             final Order order = record.value();
             if (OrderState.CREATED.equals(order.getState())) {
               //Validate the order then send the result (but note we are in a transaction so
@@ -125,7 +133,7 @@ public class OrderDetailsService implements Service {
   private void startProducer(final String bootstrapServers, final Properties defaultConfig) {
     final Properties producerConfig = new Properties();
     producerConfig.putAll(defaultConfig);
-    producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+//    producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     if (eosEnabled) {
       producerConfig.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "OrderDetailsServiceInstance1");
     }
@@ -133,26 +141,34 @@ public class OrderDetailsService implements Service {
     producerConfig.put(ProducerConfig.RETRIES_CONFIG, String.valueOf(Integer.MAX_VALUE));
     producerConfig.put(ProducerConfig.ACKS_CONFIG, "all");
     producerConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "order-details-service-producer");
+    producerConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+
+    // TODO - IGNORE IF NOT CONFLUENT
     MonitoringInterceptorUtils.maybeConfigureInterceptorsProducer(producerConfig);
 
-    producer = new KafkaProducer<>(producerConfig,
-        Topics.ORDER_VALIDATIONS.keySerde().serializer(),
-        Topics.ORDER_VALIDATIONS.valueSerde().serializer());
+    producer = new KafkaProducer<>(producerConfig);
   }
 
   private void startConsumer(final String bootstrapServers, final Properties defaultConfig) {
     final Properties consumerConfig = new Properties();
     consumerConfig.putAll(defaultConfig);
-    consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+//    consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, CONSUMER_GROUP_ID);
     consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, !eosEnabled);
     consumerConfig.put(ConsumerConfig.CLIENT_ID_CONFIG, "order-details-service-consumer");
+    consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
+    consumerConfig.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
+
+    // TODO - IGNORE IF NOT CONFLUENT
     MonitoringInterceptorUtils.maybeConfigureInterceptorsConsumer(consumerConfig);
 
-    consumer = new KafkaConsumer<>(consumerConfig,
-        Topics.ORDERS.keySerde().deserializer(),
-        Topics.ORDERS.valueSerde().deserializer());
+//    consumer = new KafkaConsumer<String, Order>(consumerConfig);
+    consumer = new KafkaConsumer<>(consumerConfig);
+//        Topics.ORDERS.keySerde().deserializer(),
+//        Topics.ORDERS.valueSerde().deserializer());
   }
 
   private void close() {
@@ -230,13 +246,13 @@ public class OrderDetailsService implements Service {
             })
             .orElse(new Properties());
 
-    final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
-    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+    final String schemaRegistryUrl = defaultConfig.getProperty( AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, DEFAULT_SCHEMA_REGISTRY_URL);
+//    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
     Schemas.configureSerdes(defaultConfig);
 
     final OrderDetailsService service = new OrderDetailsService();
     service.start(
-            cl.getOptionValue("bootstrap-servers", DEFAULT_BOOTSTRAP_SERVERS),
+            defaultConfig.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS),
             cl.getOptionValue("state-dir", "/tmp/kafka-streams-examples"),
             defaultConfig);
     addShutdownHookAndBlock(service);

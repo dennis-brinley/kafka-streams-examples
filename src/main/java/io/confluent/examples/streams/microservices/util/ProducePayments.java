@@ -3,6 +3,8 @@ package io.confluent.examples.streams.microservices.util;
 import io.confluent.examples.streams.avro.microservices.Payment;
 import io.confluent.examples.streams.utils.MonitoringInterceptorUtils;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -48,26 +50,38 @@ public class ProducePayments {
                 })
                 .orElse(new Properties());
 
-        final String bootstrapServers = cl.getOptionValue("b", DEFAULT_BOOTSTRAP_SERVERS);
-        final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
+//        final String bootstrapServers = cl.getOptionValue("b", DEFAULT_BOOTSTRAP_SERVERS);
+//        final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
 
-        final SpecificAvroSerializer<Payment> mySerializer = new SpecificAvroSerializer<>();
-        final boolean isKeySerde = false;
-        mySerializer.configure(
-            Collections.singletonMap(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl),
-            isKeySerde);
+//  TODO - GET RID OF THIS, GOING A DIFFERENT ROUTE
+        // final SpecificAvroSerializer<Payment> mySerializer = new SpecificAvroSerializer<>();
+        // final boolean isKeySerde = false;
+        // mySerializer.configure(
+        //     Collections.singletonMap(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl),
+        //     isKeySerde);
 
         final Properties props = new Properties();
         props.putAll(defaultConfig);
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        props.put(KafkaAvroSerializerConfig.VALUE_SUBJECT_NAME_STRATEGY, "io.confluent.kafka.serializers.subject.TopicNameStrategy");
+
+//  TODO - GET RID OF THIS, GOING A DIFFERENT ROUTE
+//        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.RETRIES_CONFIG, 1);
+
+        // TODO - IGNORE IF NOT CONFLUENT
         MonitoringInterceptorUtils.maybeConfigureInterceptorsProducer(props);
 
-        try (final KafkaProducer<String, Payment> producer = new KafkaProducer<>(props, new StringSerializer(), mySerializer)) {
-            while (true) {
-                final String orderId = id(0L);
-                final Payment payment = new Payment("Payment:1234", orderId, "CZK", 1000.00d);
+        try (final KafkaProducer<String, Payment> producer = new KafkaProducer<>(props)) {
+            for ( Long lOrderId = 1L; lOrderId < 2e5; lOrderId++ ) {
+
+                final int qty = (int)(lOrderId % 3) + 1;
+                final double amt = qty * 5.0d;
+
+                final Payment payment = new Payment("Payment:" + id(lOrderId), id(lOrderId), "CZK", amt);
                 final ProducerRecord<String, Payment> record = new ProducerRecord<>("payments", payment.getId(), payment);
                 producer.send(record);
                 Thread.sleep(1000L);

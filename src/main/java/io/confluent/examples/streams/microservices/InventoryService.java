@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import io.confluent.examples.streams.microservices.domain.Schemas;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import org.apache.commons.cli.*;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KafkaStreams.State;
@@ -212,13 +213,13 @@ public class InventoryService implements Service {
             })
             .orElse(new Properties());
 
-    final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
-    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+//    final String schemaRegistryUrl = cl.getOptionValue("schema-registry", DEFAULT_SCHEMA_REGISTRY_URL);
+//    defaultConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
     Schemas.configureSerdes(defaultConfig);
 
     final InventoryService service = new InventoryService();
     service.start(
-            cl.getOptionValue("bootstrap-servers", DEFAULT_BOOTSTRAP_SERVERS),
+            defaultConfig.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS),
             cl.getOptionValue("state-dir", "/tmp/kafka-streams-examples"),
             defaultConfig);
     addShutdownHookAndBlock(service);
