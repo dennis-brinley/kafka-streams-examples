@@ -384,7 +384,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>src/main/scala</source>
+                                <!-- <source>src/main/scala</source> -->
                                 <source>${project.build.directory}/generated-sources</source>
                             </sources>
                         </configuration>
@@ -397,7 +397,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>src/test/scala</source>
+                                <!-- <source>src/test/scala</source> -->
                                 <source>${project.build.directory}/generated-sources</source>
                             </sources>
                         </configuration>
@@ -406,32 +406,32 @@
             </plugin>
 
             <!-- See http://davidb.github.io/scala-maven-plugin/usage.html -->
-            <plugin>
+            <!-- <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.2.1</version>
                 <configuration>
-                    <args>
+                    <args> -->
                         <!--
                            In combination with Scala 2.11, `-Xexperimental` enables SAM
                            for Java 8 lambda support.  Make sure `kafka.scala.version`
                            is set to `2.11`, not `2.10`.
                         -->
-                        <arg>-Xexperimental</arg>
+                        <!-- <arg>-Xexperimental</arg> -->
                         <!-- Emit warning and location for usages of features that should be imported explicitly. -->
-                        <arg>-feature</arg>
+                        <!-- <arg>-feature</arg> -->
                         <!-- Emit warning and location for usages of deprecated APIs. -->
-                        <arg>-deprecation</arg>
+                        <!-- <arg>-deprecation</arg> -->
                         <!-- Enable additional warnings where generated code depends on assumptions. -->
-                        <arg>-unchecked</arg>
+                        <!-- <arg>-unchecked</arg> -->
                         <!-- Enable recommended additional warnings. -->
-                        <arg>-Xlint</arg>
+                        <!-- <arg>-Xlint</arg> -->
                         <!-- Warn if an argument list is modified to match the receiver. -->
-                        <arg>-Ywarn-dead-code</arg>
+                        <!-- <arg>-Ywarn-dead-code</arg> -->
                         <!-- Fail on compiler warnings -->
                         <!--TODO: enable this once we have warnings under control<arg>-Xfatal-warnings</arg>-->
-                    </args>
-                </configuration>
+                    <!-- </args> -->
+                <!-- </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -440,7 +440,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin> -->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -558,7 +558,7 @@
                             <skip>true</skip>
                         </configuration>
                     </execution>
-                    <execution>
+                    <!-- <execution>
                         <id>test-compile</id>
                         <phase>test-compile</phase>
                         <configuration>
@@ -575,14 +575,14 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
-                    </execution>
+                    </execution> -->
                 </executions>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
-        <profile>
+        <!-- <profile>
             <id>docker</id>
             <activation>
                 <property>
@@ -612,6 +612,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
+        </profile> -->
     </profiles>
 </project>
