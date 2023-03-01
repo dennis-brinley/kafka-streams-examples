@@ -80,6 +80,7 @@ docker run --name my-kafka-demo --rm --detach \
   --env DEMO_HOME=/opt/kafka-demo \
   ghcr.io/solacelabs/kafka-microservices-demo:1.0
 ```
+When executed this way, the container process will attempt to configure the kafka cluster by creating the necessary topics and execute the demo services automatically.
 
 ### Starting the Demo from an Interactive Container
 
