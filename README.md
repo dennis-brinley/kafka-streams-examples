@@ -75,8 +75,8 @@ In both cases, the following configurations are required:
 Example command:
 ```bash
 docker run --name my-kafka-demo --rm --detach \
-  --volume /home/ec2-user/kafka-demo/my-configs:/opt/kafka-demo/my-configs \
-  --env CONFIG_FILE=/opt/kafka-demo/my-configs/my-kafka-config.properties \
+  --volume /home/ec2-user/kafka-demo/configs:/opt/kafka-demo/configs \
+  --env CONFIG_FILE=/opt/kafka-demo/configs/my-kafka-config.properties \
   --env DEMO_HOME=/opt/kafka-demo \
   ghcr.io/solacelabs/kafka-microservices-demo:1.0
 ```
@@ -89,8 +89,8 @@ Run the following command to execute the demo container interactively:
 ```bash
 docker run -i -t --name kafka-demo \
   --rm \
-  --volume /home/ec2-user/kafka-demo/my-configs:/opt/kafka-demo/my-configs \
-  --env CONFIG_FILE=/opt/kafka-demo/my-configs/my-kafka-config.properties \
+  --volume /home/ec2-user/kafka-demo/configs:/opt/kafka-demo/configs \
+  --env CONFIG_FILE=/opt/kafka-demo/configs/my-kafka-config.properties \
   --env DEMO_HOME=/opt/kafka-demo \
   ghcr.io/solacelabs/kafka-microservices-demo:1.0 /bin/bash
 ```
